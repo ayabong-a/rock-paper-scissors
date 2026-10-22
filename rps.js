@@ -131,3 +131,5 @@ function game() {
     );
   }
 }
+
+window.addEventListener('load', game);
