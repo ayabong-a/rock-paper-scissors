@@ -56,98 +56,139 @@ function playRound(playerSelection, computerSelection) {
   };
 }
 
+
 function game() {
-  const startGame = confirm(
-    "WELCOME TO ROCK, PAPER, SCISSORS!\n\n" +
-      "A rogue AI is trying to take over the world. " +
-      "Beat it by winning 3 rounds!\n\n" +
-      "HOW TO PLAY\n" +
-      "Type Rock, Paper or Scissors. You can also type R, P or S.\n" +
-      "Your choice is not case-sensitive. Invalid attempts do not count.\n" +
-      "Draws do not award points.\n" +
-      "Press Cancel during a move prompt to stop the game safely.\n\n" +
-      "YOUR RESULTS\n" +
-      "Round results and scores will appear in pop-up messages. " +
-      "The browser console will also show the full game log.\n\n" +
-      "To open the console in Chrome or Edge on Windows, " +
-      "press Ctrl + Shift + J.\n\n" +
-      "Click OK to start playing, or Cancel to exit.",
-  );
+  while (true) {
+    const startGame = confirm(
+      'WELCOME TO ROCK, PAPER, SCISSORS!\n\n' +
+      'A rogue AI is trying to take over the world. ' +
+      'Beat it by winning 3 rounds!\n\n' +
+      'HOW TO PLAY\n' +
+      'Type Rock, Paper or Scissors. You can also type R, P or S.\n' +
+      'Your choice is not case-sensitive. Invalid attempts do not count.\n' +
+      'Draws do not award points.\n' +
+      'Press Cancel during a move prompt to stop the current game.\n\n' +
+      'YOUR RESULTS\n' +
+      'Round results and scores will appear in pop-up messages. ' +
+      'The browser console will also show the full game log.\n\n' +
+      'To open the console in Chrome or Edge on Windows, ' +
+      'press Ctrl + Shift + J.\n\n' +
+      'Click OK to start playing, or Cancel for more options.'
+    );
 
-  if (!startGame) {
-    console.log("The player chose not to start the game.");
-    return;
-  }
-
-  const score = { player: 0, computer: 0 };
-  let roundNumber = 0;
-
-  while (score.player < ROUNDS_TO_WIN && score.computer < ROUNDS_TO_WIN) {
-    let playerSelection = null;
-
-    while (playerSelection === null) {
-      const input = prompt(
-        `ROUND ${roundNumber + 1}\n` +
-          `Score — You: ${score.player} | Evil AI: ${score.computer}\n\n` +
-          "Choose Rock, Paper or Scissors (R / P / S):",
+    if (!startGame) {
+      const tryAgain = confirm(
+        'You chose not to start the game.\n\n' +
+        'Would you like to return to the instructions?\n\n' +
+        'Click OK to try again, or Cancel to exit.'
       );
 
-      if (input === null) {
-        console.log("The player cancelled the game.");
-        alert("You cancelled the game. Thanks for playing!");
-        return;
+      if (tryAgain) {
+        continue;
       }
 
-      playerSelection = normalizeChoice(input);
+      console.log('The player exited without starting the game.');
+      return;
+    }
 
-      if (playerSelection === null) {
-        alert(
-          "That is not a valid move. Please enter Rock, Paper, Scissors, R, P or S. This attempt does not count as a round.",
+    const score = { player: 0, computer: 0 };
+    let roundNumber = 0;
+    let gameCancelled = false;
+
+    while (
+      score.player < ROUNDS_TO_WIN &&
+      score.computer < ROUNDS_TO_WIN
+    ) {
+      let playerSelection = null;
+
+      while (playerSelection === null) {
+        const input = prompt(
+          `ROUND ${roundNumber + 1}\n` +
+          `Score — You: ${score.player} | Evil AI: ${score.computer}\n\n` +
+          'Choose Rock, Paper or Scissors (R / P / S):'
         );
+
+        if (input === null) {
+          gameCancelled = true;
+          console.log('The player cancelled the current game.');
+          break;
+        }
+
+        playerSelection = normalizeChoice(input);
+
+        if (playerSelection === null) {
+          alert(
+            'That is not a valid move. Please enter Rock, Paper, ' +
+            'Scissors, R, P or S. This attempt does not count as a round.'
+          );
+        }
       }
+
+      if (gameCancelled) {
+        break;
+      }
+
+      const computerSelection = computerPlay();
+      const result = playRound(playerSelection, computerSelection);
+
+      roundNumber++;
+
+      if (result.outcome === 'win') {
+        score.player++;
+      } else if (result.outcome === 'loss') {
+        score.computer++;
+      }
+
+      console.log(
+        `Round ${roundNumber}: You chose ${playerSelection}; ` +
+        `the AI chose ${computerSelection}. ${result.message} ` +
+        `Score — You: ${score.player} | Evil AI: ${score.computer}`
+      );
+
+      alert(
+        `${result.message}\n\n` +
+        `Score — You: ${score.player} | Evil AI: ${score.computer}`
+      );
     }
 
-    const computerSelection = computerPlay();
-    const result = playRound(playerSelection, computerSelection);
+    if (gameCancelled) {
+      alert(
+        'You cancelled the current game.\n\n' +
+        `Your score: ${score.player} | Evil AI: ${score.computer}`
+      );
+    } else if (score.player === ROUNDS_TO_WIN) {
+      console.log(
+        `GAME OVER: You defeated the Evil AI ${score.player}–${score.computer}!`
+      );
 
-    roundNumber++;
-
-    if (result.outcome === "win") {
-      score.player++;
-    } else if (result.outcome === "loss") {
-      score.computer++;
-    }
-
-    console.log(
-      `Round ${roundNumber}: You chose ${playerSelection}; the AI chose ${computerSelection}. ` +
-        `${result.message} Score — You: ${score.player} | Evil AI: ${score.computer}`,
-    );
-
-    alert(
-      `${result.message}\n\n` +
-        `Score — You: ${score.player} | Evil AI: ${score.computer}`,
-    );
-  }
-
-  if (score.player === ROUNDS_TO_WIN) {
-    console.log(
-      `GAME OVER: You defeated the Evil AI ${score.player}–${score.computer}!`,
-    );
-    alert(
-      `CONGRATULATIONS! YOU DEFEATED THE EVIL AI!\n\n` +
+      alert(
+        'CONGRATULATIONS! YOU DEFEATED THE EVIL AI!\n\n' +
         `Final score: You ${score.player} — ${score.computer} Evil AI.\n\n` +
-        "The world is safe... for now!",
-    );
-  } else {
-    console.log(
-      `GAME OVER: The Evil AI won ${score.computer}–${score.player}.`,
-    );
-    alert(
-      `THE EVIL AI HAS WON!\n\n` +
+        'The world is safe... for now!'
+      );
+    } else {
+      console.log(
+        `GAME OVER: The Evil AI won ${score.computer}–${score.player}.`
+      );
+
+      alert(
+        'THE EVIL AI HAS WON!\n\n' +
         `Final score: Evil AI ${score.computer} — ${score.player} You.\n\n` +
-        "The AI is celebrating. Refresh the page to try again!",
+        'The AI is celebrating. You can challenge it again!'
+      );
+    }
+
+    const playAgain = confirm(
+      'Would you like to play another game?\n\n' +
+      'Click OK to return to the instructions, or Cancel to exit.'
     );
+
+    if (!playAgain) {
+      console.log('The player exited the game.');
+      alert('Thanks for playing! Refresh the page if you want to return later.');
+      return;
+    }
   }
 }
 
-window.addEventListener("load", game);
+window.addEventListener('load', game);
