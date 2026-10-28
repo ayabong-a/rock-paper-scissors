@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rock Paper Scissors</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <main class="game">
+    <h1>Rock, Paper, Scissors</h1>
+
+    <p>
+      A rogue AI is trying to take over the world.
+      Choose your move and be the first to reach
+      <span id="winning-score">5</span> points!
+    </p>
+
+    <section class="scoreboard" aria-label="Running score">
+      <div class="score-card">
+        <h2>You</h2>
+        <p id="player-score">0</p>
+      </div>
+
+      <div class="score-card">
+        <h2>Evil AI</h2>
+        <p id="computer-score">0</p>
+      </div>
+    </section>
+
+    <div class="moves" role="group" aria-label="Choose your move">
+      <button type="button" class="move-button" data-move="Rock">
+        Rock
+      </button>
+
+      <button type="button" class="move-button" data-move="Paper">
+        Paper
+      </button>
+
+      <button type="button" class="move-button" data-move="Scissors">
+        Scissors
+      </button>
+    </div>
+
+    <div
+      id="results"
+      class="results"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <p id="round-result">Choose a move to start playing.</p>
+      <p id="game-result"></p>
+    </div>
+
+    <button type="button" id="restart-button">
+      Restart game
+    </button>
+  </main>
+</body>
+</html>
