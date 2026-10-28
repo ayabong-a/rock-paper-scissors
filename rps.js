@@ -3,6 +3,16 @@
 const MOVES = ["Rock", "Paper", "Scissors"];
 const ROUNDS_TO_WIN = 3;
 
+const CHOICE_ALIASES = {
+  rock: "Rock",
+  r: "Rock",
+  paper: "Paper",
+  p: "Paper",
+  scissors: "Scissors",
+  scissor: "Scissors",
+  s: "Scissors",
+};
+
 const BEATS = {
   "Rock|Scissors": "crushes",
   "Paper|Rock": "covers",
@@ -20,19 +30,13 @@ function normalizeChoice(input) {
 
   const choice = input.trim().toLowerCase().replace(/\s+/g, "");
 
-  if (choice === "rock" || choice === "r") {
-    return "Rock";
-  }
+  return Object.hasOwn(CHOICE_ALIASES, choice)
+    ? CHOICE_ALIASES[choice]
+    : null;
+}
 
-  if (choice === "paper" || choice === "p") {
-    return "Paper";
-  }
-
-  if (choice === "scissors" || choice === "scissor" || choice === "s") {
-    return "Scissors";
-  }
-
-  return null;
+function formatScore(score) {
+  return `Score — You: ${score.player} | Evil AI: ${score.computer}`;
 }
 
 function playRound(playerSelection, computerSelection) {
@@ -50,17 +54,42 @@ function playRound(playerSelection, computerSelection) {
     };
   }
 
-  if (BEATS[`${playerSelection}|${computerSelection}`]) {
+  const winningAction = BEATS[`${playerSelection}|${computerSelection}`];
+
+  if (winningAction) {
     return {
       outcome: "win",
-      message: `Your ${playerSelection} ${BEATS[`${playerSelection}|${computerSelection}`]} the AI's ${computerSelection}. You win this round!`,
+      message: `Your ${playerSelection} ${winningAction} the AI's ${computerSelection}. You win this round!`,
     };
   }
 
+  const losingAction = BEATS[`${computerSelection}|${playerSelection}`];
+
   return {
     outcome: "loss",
-    message: `The AI's ${computerSelection} ${BEATS[`${computerSelection}|${playerSelection}`]} your ${playerSelection}. The AI wins this round!`,
+    message: `The AI's ${computerSelection} ${losingAction} your ${playerSelection}. The AI wins this round!`,
   };
+}
+
+function showGameResult(score, gameCancelled) {
+  if (gameCancelled) {
+    alert(`You cancelled the current game.\n\n${formatScore(score)}`);
+    return;
+  }
+
+  const playerWon = score.player === ROUNDS_TO_WIN;
+
+  const heading = playerWon
+    ? "CONGRATULATIONS! YOU DEFEATED THE EVIL AI!"
+    : "THE EVIL AI HAS WON!";
+
+  const closingMessage = playerWon
+    ? "The world is safe... for now!"
+    : "The AI is celebrating. You can challenge it again!";
+
+  console.log(`GAME OVER: ${heading} ${formatScore(score)}`);
+
+  alert(`${heading}\n\n${formatScore(score)}\n\n${closingMessage}`);
 }
 
 function game() {
@@ -68,7 +97,7 @@ function game() {
     const startGame = confirm(
       "WELCOME TO ROCK, PAPER, SCISSORS!\n\n" +
         "A rogue AI is trying to take over the world. " +
-        "Beat it by winning 3 rounds!\n\n" +
+        `Beat it by winning ${ROUNDS_TO_WIN} rounds!\n\n` +
         "HOW TO PLAY\n" +
         "Type Rock, Paper or Scissors. You can also type R, P or S.\n" +
         "Your choice is not case-sensitive. Invalid attempts do not count.\n" +
@@ -104,33 +133,26 @@ function game() {
     let gameCancelled = false;
 
     while (score.player < ROUNDS_TO_WIN && score.computer < ROUNDS_TO_WIN) {
-      let playerSelection = null;
+      const input = prompt(
+        `ROUND ${roundNumber + 1}\n` +
+          `${formatScore(score)}\n\n` +
+          "Choose Rock, Paper or Scissors (R / P / S):",
+      );
 
-      while (playerSelection === null) {
-        const input = prompt(
-          `ROUND ${roundNumber + 1}\n` +
-            `Score — You: ${score.player} | Evil AI: ${score.computer}\n\n` +
-            "Choose Rock, Paper or Scissors (R / P / S):",
-        );
-
-        if (input === null) {
-          gameCancelled = true;
-          console.log("The player cancelled the current game.");
-          break;
-        }
-
-        playerSelection = normalizeChoice(input);
-
-        if (playerSelection === null) {
-          alert(
-            "That is not a valid move. Please enter Rock, Paper, " +
-              "Scissors, R, P or S. This attempt does not count as a round.",
-          );
-        }
+      if (input === null) {
+        gameCancelled = true;
+        console.log("The player cancelled the current game.");
+        break;
       }
 
-      if (gameCancelled) {
-        break;
+      const playerSelection = normalizeChoice(input);
+
+      if (playerSelection === null) {
+        alert(
+          "That is not a valid move. Please enter Rock, Paper, " +
+            "Scissors, R, P or S. This attempt does not count as a round.",
+        );
+        continue;
       }
 
       const computerSelection = computerPlay();
@@ -144,44 +166,17 @@ function game() {
         score.computer++;
       }
 
+      const roundSummary = `${result.message}\n\n${formatScore(score)}`;
+
       console.log(
         `Round ${roundNumber}: You chose ${playerSelection}; ` +
-          `the AI chose ${computerSelection}. ${result.message} ` +
-          `Score — You: ${score.player} | Evil AI: ${score.computer}`,
+          `the AI chose ${computerSelection}.\n${roundSummary}`,
       );
 
-      alert(
-        `${result.message}\n\n` +
-          `Score — You: ${score.player} | Evil AI: ${score.computer}`,
-      );
+      alert(roundSummary);
     }
 
-    if (gameCancelled) {
-      alert(
-        "You cancelled the current game.\n\n" +
-          `Your score: ${score.player} | Evil AI: ${score.computer}`,
-      );
-    } else if (score.player === ROUNDS_TO_WIN) {
-      console.log(
-        `GAME OVER: You defeated the Evil AI ${score.player}–${score.computer}!`,
-      );
-
-      alert(
-        "CONGRATULATIONS! YOU DEFEATED THE EVIL AI!\n\n" +
-          `Final score: You ${score.player} — ${score.computer} Evil AI.\n\n` +
-          "The world is safe... for now!",
-      );
-    } else {
-      console.log(
-        `GAME OVER: The Evil AI won ${score.computer}–${score.player}.`,
-      );
-
-      alert(
-        "THE EVIL AI HAS WON!\n\n" +
-          `Final score: Evil AI ${score.computer} — ${score.player} You.\n\n` +
-          "The AI is celebrating. You can challenge it again!",
-      );
-    }
+    showGameResult(score, gameCancelled);
 
     const playAgain = confirm(
       "Would you like to play another game?\n\n" +
@@ -190,10 +185,12 @@ function game() {
 
     if (!playAgain) {
       console.log("The player exited the game.");
+
       alert(
         "Thanks for playing! You can return anytime by typing game() " +
           "into the browser console and pressing Enter.",
       );
+
       return;
     }
   }
