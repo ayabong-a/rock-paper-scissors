@@ -128,22 +128,31 @@ button:disabled {
 
 .confetti-piece {
   position: absolute;
-  top: -20px;
   width: var(--size);
   height: calc(var(--size) * 0.6);
   background-color: var(--color);
-  animation: confetti-fall var(--duration) linear forwards;
+  opacity: 0;
+  animation: confetti-burst var(--duration) ease-out forwards;
 }
 
-@keyframes confetti-fall {
-  from {
-    transform: translate(0, -20px) rotate(0deg);
+@keyframes confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 1;
   }
 
-  to {
+  75% {
+    opacity: 1;
+  }
+
+  100% {
     transform:
-      translate(var(--drift), calc(100vh + 40px))
+      translate(
+        calc(-50% + var(--burst-x)),
+        calc(-50% + var(--burst-y))
+      )
       rotate(var(--rotation));
+    opacity: 0;
   }
 }
 
