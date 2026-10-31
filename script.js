@@ -16,7 +16,9 @@ const score = {
 
 let roundNumber = 0;
 let gameOver = false;
+let confettiTimer = null;
 
+// Find the HTML elements.
 const moveButtons = document.querySelectorAll(".move-button");
 const playerScoreDisplay = document.querySelector("#player-score");
 const computerScoreDisplay = document.querySelector("#computer-score");
@@ -86,6 +88,79 @@ function setMoveButtonsDisabled(disabled) {
   });
 }
 
+function clearConfetti() {
+  clearTimeout(confettiTimer);
+  confettiTimer = null;
+
+  document.querySelectorAll(".confetti-layer").forEach((layer) => {
+    layer.remove();
+  });
+}
+
+function throwConfetti(isFinalWin = false) {
+  clearConfetti();
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  layer.setAttribute("aria-hidden", "true");
+
+  const colors = [
+    "#facc15",
+    "#38bdf8",
+    "#f472b6",
+    "#4ade80",
+    "#a78bfa",
+  ];
+
+  const pieceCount = isFinalWin ? 180 : 35;
+  const baseSize = isFinalWin ? 10 : 4;
+
+  // Slow falling confetti.
+  const baseDuration = isFinalWin ? 8000 : 6000;
+
+  for (let i = 0; i < pieceCount; i++) {
+    const piece = document.createElement("span");
+
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+
+    piece.style.setProperty(
+      "--size",
+      `${baseSize + Math.random() * 4}px`,
+    );
+
+    piece.style.setProperty(
+      "--color",
+      colors[Math.floor(Math.random() * colors.length)],
+    );
+
+    piece.style.setProperty(
+      "--duration",
+      `${baseDuration + Math.random() * 1000}ms`,
+    );
+
+    piece.style.setProperty(
+      "--drift",
+      `${Math.random() * 300 - 150}px`,
+    );
+
+    piece.style.setProperty(
+      "--rotation",
+      `${Math.random() * 1080 - 540}deg`,
+    );
+
+    layer.appendChild(piece);
+  }
+
+  document.body.appendChild(layer);
+
+  confettiTimer = setTimeout(clearConfetti, baseDuration + 1100);
+}
+
 function updateGame(result) {
   if (result.outcome === "invalid") {
     roundResultDisplay.textContent = result.message;
@@ -105,22 +180,27 @@ function updateGame(result) {
   roundResultDisplay.textContent =
     `Round ${roundNumber}: ${result.message}`;
 
-  if (
-    score.player >= POINTS_TO_WIN ||
-    score.computer >= POINTS_TO_WIN
-  ) {
+  const playerWonGame = score.player >= POINTS_TO_WIN;
+  const computerWonGame = score.computer >= POINTS_TO_WIN;
+
+  if (playerWonGame || computerWonGame) {
     gameOver = true;
 
-    gameResultDisplay.textContent =
-      score.player >= POINTS_TO_WIN
-        ? "You reached 5 points! You defeated the Evil AI!"
-        : "The Evil AI reached 5 points and won the game!";
+    gameResultDisplay.textContent = playerWonGame
+      ? `You reached ${POINTS_TO_WIN} points! You defeated the Evil AI!`
+      : `The Evil AI reached ${POINTS_TO_WIN} points and won the game!`;
 
     setMoveButtonsDisabled(true);
+  }
+
+  if (result.outcome === "win") {
+    throwConfetti(playerWonGame);
   }
 }
 
 function resetGame() {
+  clearConfetti();
+
   score.player = 0;
   score.computer = 0;
   roundNumber = 0;
@@ -134,9 +214,12 @@ function resetGame() {
   setMoveButtonsDisabled(false);
 }
 
-// Each button supplies its own move through its data-move attribute.
+// Play one round whenever the player clicks a move button.
 moveButtons.forEach((button) => {
   button.addEventListener("click", () => {
+    // Immediately remove confetti from the previous round.
+    clearConfetti();
+
     if (gameOver) {
       return;
     }
