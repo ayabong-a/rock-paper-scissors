@@ -116,45 +116,70 @@ function throwConfetti(isFinalWin = false) {
     "#a78bfa",
   ];
 
-  const pieceCount = isFinalWin ? 180 : 35;
-  const baseSize = isFinalWin ? 10 : 4;
+  // All bursts begin at the top of the screen.
+  const origins = isFinalWin
+    ? [
+        { x: 20, y: 0 },
+        { x: 50, y: 0 },
+        { x: 80, y: 0 },
+      ]
+    : [{ x: 50, y: 0 }];
 
-  // Slow falling confetti.
+  const piecesPerBurst = isFinalWin ? 60 : 35;
+  const baseSize = isFinalWin ? 10 : 4;
   const baseDuration = isFinalWin ? 8000 : 6000;
 
-  for (let i = 0; i < pieceCount; i++) {
-    const piece = document.createElement("span");
+  const spread =
+    Math.max(window.innerWidth, window.innerHeight) *
+    (isFinalWin ? 0.9 : 0.7);
 
-    piece.className = "confetti-piece";
-    piece.style.left = `${Math.random() * 100}%`;
+  origins.forEach((origin) => {
+    for (let i = 0; i < piecesPerBurst; i++) {
+      const piece = document.createElement("span");
 
-    piece.style.setProperty(
-      "--size",
-      `${baseSize + Math.random() * 4}px`,
-    );
+      // Fan outward and downward from the top.
+      const angle =
+        ((i + Math.random()) / piecesPerBurst) * Math.PI;
 
-    piece.style.setProperty(
-      "--color",
-      colors[Math.floor(Math.random() * colors.length)],
-    );
+      const distance = spread * (0.4 + Math.random() * 0.6);
 
-    piece.style.setProperty(
-      "--duration",
-      `${baseDuration + Math.random() * 1000}ms`,
-    );
+      piece.className = "confetti-piece";
+      piece.style.left = `${origin.x}%`;
+      piece.style.top = `${origin.y}%`;
 
-    piece.style.setProperty(
-      "--drift",
-      `${Math.random() * 300 - 150}px`,
-    );
+      piece.style.setProperty(
+        "--size",
+        `${baseSize + Math.random() * 4}px`,
+      );
 
-    piece.style.setProperty(
-      "--rotation",
-      `${Math.random() * 1080 - 540}deg`,
-    );
+      piece.style.setProperty(
+        "--color",
+        colors[Math.floor(Math.random() * colors.length)],
+      );
 
-    layer.appendChild(piece);
-  }
+      piece.style.setProperty(
+        "--duration",
+        `${baseDuration + Math.random() * 1000}ms`,
+      );
+
+      piece.style.setProperty(
+        "--burst-x",
+        `${Math.cos(angle) * distance}px`,
+      );
+
+      piece.style.setProperty(
+        "--burst-y",
+        `${Math.sin(angle) * distance}px`,
+      );
+
+      piece.style.setProperty(
+        "--rotation",
+        `${Math.random() * 360 - 180}deg`,
+      );
+
+      layer.appendChild(piece);
+    }
+  });
 
   document.body.appendChild(layer);
 
@@ -214,10 +239,9 @@ function resetGame() {
   setMoveButtonsDisabled(false);
 }
 
-// Play one round whenever the player clicks a move button.
+// Each click plays one round and clears the previous celebration.
 moveButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    // Immediately remove confetti from the previous round.
     clearConfetti();
 
     if (gameOver) {
@@ -233,3 +257,6 @@ moveButtons.forEach((button) => {
 });
 
 restartButton.addEventListener("click", resetGame);
+
+// Set the initial score and button states.
+resetGame();
